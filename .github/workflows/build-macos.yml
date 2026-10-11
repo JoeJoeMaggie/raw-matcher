@@ -30,7 +30,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           python -m PyInstaller --noconfirm --clean --onefile --windowed \
             --name "RAW匹配工具" \
-            --osx-bundle-identifier com.yourname.rawmatcher \
+            --osx-bundle-identifier com.joejoemaggie.rawmatcher \
             --collect-all tkinterdnd2 \
             --icon icon.icns \
             --add-data "icon.png:." \
