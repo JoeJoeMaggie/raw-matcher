@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# PyInstaller 产物（不要提交，用 Actions 或本地 build 脚本生成）
+build/
+dist/
+*.spec
+
+# 虚拟环境
+.venv/
+.venv-build/
+venv/
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,56 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:        # Actions 页面手动点 Run workflow
+  push:
+    tags:
+      - 'v*'                # 推 v 开头的 tag 自动触发
+
+jobs:
+  build-macos:
+    # macos-latest 目前是 Apple Silicon（arm64），打出来的包只能在这类 Mac 上跑。
+    # 想让 Intel Mac 也能用，把 runs-on 换成 macos-13 再跑一次即可。
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # 3.12/3.13 打包最稳；3.14 目前有 Tcl 数据目录的兼容问题
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller tkinterdnd2
+
+      - name: Build .app
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          python -m PyInstaller --noconfirm --clean --onefile --windowed \
+            --name "RAW匹配工具" \
+            --osx-bundle-identifier com.yourname.rawmatcher \
+            --collect-all tkinterdnd2 \
+            --icon icon.icns \
+            --add-data "icon.png:." \
+            main.py
+
+      - name: Ad-hoc sign
+        # Apple Silicon 上完全没签名的 app 会被直接判定为"已损坏"，
+        # 临时签名（-）不需要开发者账号，能让它被正常打开。
+        run: |
+          codesign --force --deep --sign - "dist/RAW匹配工具.app"
+          codesign --verify --verbose "dist/RAW匹配工具.app" || true
+
+      - name: Package as zip
+        # -y 保留符号链接，否则解压后 .app 内部结构会坏掉
+        run: |
+          cd dist
+          zip -r -y "RAW匹配工具-macOS.zip" "RAW匹配工具.app"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: dist/RAW匹配工具-macOS.zip
